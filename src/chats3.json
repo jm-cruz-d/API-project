@@ -1,0 +1,18 @@
+[
+    {
+        "idUser": 10,
+        "userName": "Peter Parker",
+        "idMessage": 52,
+        "idChat": 5,
+        "datetime": "2019-11-11 12:15:41",
+        "text": "Hey doc, you have eight arms, it is quite strange"
+    },
+    {
+        "idUser": 11,
+        "userName": "Doctor Octopus",
+        "idMessage": 53,
+        "idChat": 5,
+        "datetime": "2019-11-21 12:16:59",
+        "text": "Well, you have a spiderweb on your face, moron"
+    }
+]

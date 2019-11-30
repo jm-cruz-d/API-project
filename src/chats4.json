@@ -1,0 +1,58 @@
+[
+    {
+        "idUser": 12,
+        "userName": "Frodo Bolson",
+        "idMessage": 54,
+        "idChat": 6,
+        "datetime": "2019-11-23 12:15:41",
+        "text": "Pippin, has you taken the food?"
+    },
+    {
+        "idUser": 13,
+        "userName": "Peregrin Tuk",
+        "idMessage": 55,
+        "idChat": 6,
+        "datetime": "2019-11-23 12:16:59",
+        "text": "I just have lembas bread"
+    },
+    {
+        "idUser": 12,
+        "userName": "Frodo Bolson",
+        "idMessage": 56,
+        "idChat": 6,
+        "datetime": "2019-11-23 12:17:41",
+        "text": "Mmmmm, tasty"
+    },
+    {
+        "idUser": 13,
+        "userName": "Peregrin Tuk",
+        "idMessage": 57,
+        "idChat": 6,
+        "datetime": "2019-11-23 12:18:59",
+        "text": "Well, I prefer a good piece of meet"
+    },
+    {
+        "idUser": 14,
+        "userName": "Samsagaz Gamyi",
+        "idMessage": 58,
+        "idChat": 6,
+        "datetime": "2019-11-23 12:19:41",
+        "text": "That's sound good but my favourite plate are potatoes"
+    },
+    {
+        "idUser": 15,
+        "userName": "Meriadoc Brandigamo",
+        "idMessage": 59,
+        "idChat": 6,
+        "datetime": "2019-11-23 12:20:59",
+        "text": "Potatoes? Are you crazy?"
+    },
+    {
+        "idUser": 12,
+        "userName": "Frodo Bolson",
+        "idMessage": 60,
+        "idChat": 6,
+        "datetime": "2019-11-23 12:21:41",
+        "text": "Merry, be nice with Sam!!"
+    }
+]
