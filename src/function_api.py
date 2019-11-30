@@ -60,3 +60,13 @@ def addConver(extension_json):
         return print('Done!')
 
 addConver('chats4.json')
+
+
+def query(origin_column, table, value_column, value):
+    query = """
+        SELECT {} FROM {} WHERE {}='{}'
+    """.format(origin_column, table, value_column, value)
+    print("Running query")
+    print(query)
+    df = pd.read_sql_query(query, engine)
+    return df

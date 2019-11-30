@@ -7,56 +7,32 @@ import pandas as pd
 import json
 from sqlalchemy.sql import text
 import sqlalchemy as db
+from bottle import route, run, template, get, post
+import random
 
 password = getpass.getpass("Insert your mysql root password: ")
 engine = db.create_engine('mysql+pymysql://root:{}@localhost/conversation'.format(password))
 print("Connected to server!")
 
-def addConver(extension_json):
-    query = "INSERT INTO {} VALUES {}"
-    with engine.connect() as con:
+#@route('/hello/<name>')
+#def index(name):
+#    return template('<b>Hello {{name}}</b>!', name=name)
 
-        with open(extension_json) as f:
-            chats_json = json.load(f)
+@get('/')
+def index():
+    query = """
+        SELECT * FROM conversation.messages
+    """
+    df = json.dumps(query, engine)
+    return df
 
-        users = list(set([(chats_json[i]['idUser'],chats_json[i]['userName']) for i in range(len(chats_json))]))
 
-        chats = list(set([(chats_json[i]['idChat']) for i in range(len(chats_json))]))
 
-        for user in users:
-            q = query.format('users (idUser, userName)',"({}, '{}')".format(user[0],user[1]),'users.idUser')
-            print(q)
-            try:
-                con.execute(q)
-                #Get Response
-                id = con.fetchone()[0]
-                print(f"value inserted: {id}")
-            except:
-                print("At least I tried")
+run(host='localhost', port=8080)
 
-        
-        for chat in chats:
-            q = query.format('chats(idChat)',"({})".format(chat),'chats.idChat')
-            print(q)
-            try:
-                con.execute(q)
-                #Get Response
-                id = con.fetchone()[0]
-                print(f"value inserted: {id}")
-            except:
-                print("At least I tried")
 
-        for message in chats_json:
-            q = query.format('messages(idMessage, text, datetime, idUser, idChat)','({},"{}","{}",{},{})'.format(message['idMessage'],message['text'],message['datetime'],message['idUser'],message['idChat'],),'messages.idMessage')
-            print(q)
-            try:
-                con.execute(q)
-                #Get Response
-                id = con.fetchone()[0]
-                print(f"value inserted: {id}")
-            except:
-                print("At least I tried")
+### Para probar en el jupyter notebook
+import requests
 
-        return print('Done!')
-
-addConver('chats4.json')
+data = requests.get('http://localhost:8080/chiste').json()
+print(data["chiste"])
