@@ -11,6 +11,8 @@ import sqlalchemy as db
 from bottle import route, run, template, get, post, request
 from dotenv import load_dotenv
 import function_api as fa
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity as distance
 load_dotenv()
 
 url = os.getenv("CONNECTION")
@@ -80,5 +82,6 @@ def analyseUsers(user_id):
 def messandUsers(idUser=0):
     respond = json.loads(fa.queryUserandMess(idUser))
     return json.dumps(respond)
-    
+
+
 run(host='localhost', port=8080)
