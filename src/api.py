@@ -17,16 +17,17 @@ url = os.getenv("CONNECTION")
 engine = db.create_engine(url)
 print("Connected to server!")
 
+# Select all users and idUser
+@get('/Users/')
+def totUsers():
+    messages = fa.queryUsers()
+    return json.dumps(messages)
+
 # Select messages from idUser
 @get('/Users/<idUser>')
-def query(idUser=0):
-    query = """
-        SELECT * FROM messages WHERE users_idUser='{}'
-    """.format(idUser)
-    print(f"Running query: {query}")
-    df = pd.read_sql_query(query, engine)
-    new = df.to_json(orient='records')
-    return json.dumps(new)
+def messUsers(idUser=0):
+    messages = fa.queryUsermess(idUser)
+    return json.dumps(messages)
 
 '''
 Create a user introducing name in URL.
@@ -34,42 +35,19 @@ If you wanna insert a full name you have to write %20 between first name and las
 
 @post('/user/create/<name>')
 def createUser(name):
-    query = "INSERT INTO users (userName) VALUES ('{}')".format(name)
-    with engine.connect() as con:
-        con.execute(query)
-    q = """
-        SELECT * FROM users WHERE userName='{}'
-    """.format(name)
-    df = pd.read_sql_query(q, engine)
-    new = df.to_json(orient='records')
-    return json.dumps(new)
+    return json.dumps(fa.queryCreateUs(name))
 '''
 
 # Create a User in Database
 @post('/user/create')
 def createUser():
     name = str(request.forms.get('name'))
-    query = "INSERT INTO users (userName) VALUES ('{}')".format(name)
-    with engine.connect() as con:
-        con.execute(query)
-    q = """
-        SELECT * FROM users WHERE userName='{}'
-    """.format(name)
-    print(f"Running query: {q}")
-    df = pd.read_sql_query(q, engine)
-    new = df.to_json(orient='records')
-    return json.dumps(new)
+    return json.dumps(fa.queryCreateUs(name))
 
 # Create a Chat in Database
 @post('/chat/create')
 def createChat():
-    with engine.connect() as con:
-        number_chat = list(con.execute("SELECT idChat FROM chats ORDER BY idChat DESC LIMIT 1"))
-        new_chatId = number_chat[0][0]+1
-    with engine.connect() as con:
-        query = "INSERT INTO chats (idChat) VALUES ({})".format(new_chatId)
-        con.execute(query)
-    return {f'{new_chatId}': 'Created chat'}
+    return fa.queryCreateChat()
 
 # Create a Message in Database
 @post('/chat/<chat_id>/addmessage')
@@ -77,35 +55,30 @@ def createMessage(chat_id):
     text = str(request.forms.get('text'))
     user = int(request.forms.get('user_id'))
     chat = chat_id
-    query = '''INSERT INTO messages (text, datetime, users_idUser, chats_idChat) VALUES ('{}', CURRENT_TIMESTAMP, {}, {})'''.format(text, user, chat)
-    with engine.connect() as con:
-        con.execute(query)
-    
-    q = """
-        SELECT idMessage FROM messages WHERE text='{}'
-    """.format(text)
-    print(f"Running query: {q}")
-    df = pd.read_sql_query(q, engine)
-    new = df.to_json(orient='records')
-    return json.dumps(new)
+    return json.dumps(fa.queryCreateMess(text, user, chat))
 
 # Select text from a chat
 @get('/chat/<chat_id>/list')
-def queryMessages(chat_id):
-    chatina = fa.queryChat(chat_id)
-    return json.dumps(chatina)
+def listMessages(chat_id):
+    respond = fa.queryChat(chat_id)
+    return json.dumps(respond)
 
-#Sentiment analysis from messages
+#Sentiment analysis from messages in chats
 @get('/chat/<chat_id>/sentiment')
-def analyseMessages(chat_id):
-    sid = SentimentIntensityAnalyzer()
+def analyseChats(chat_id):
     respond = json.loads(fa.queryChat(chat_id))
-    lst = []
-    for sent in respond:
-        lst.append({sent['text'] : sid.polarity_scores(sent['text'])})
-    x, y, z = fa.mediaChat(lst)
-    lst.insert(0, {'chat media': {'neg': x, 'neu': y, 'pos': z}})
-    print(x, y, z)
-    return json.dumps(lst)
+    return json.dumps(fa.listSents(respond))
 
+#Sentiment analysis from messages in users
+@get('/users/<user_id>/sentiment')
+def analyseUsers(user_id):
+    respond = json.loads(fa.queryUsermess(user_id))
+    return json.dumps(fa.listSents(respond))
+
+#Select messages and UserName
+@get('/message/<idUser>')
+def messandUsers(idUser=0):
+    respond = json.loads(fa.queryUserandMess(idUser))
+    return json.dumps(respond)
+    
 run(host='localhost', port=8080)

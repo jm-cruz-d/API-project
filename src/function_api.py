@@ -64,9 +64,61 @@ def addConver(extension_json):
         return print('Done!')
 
 
+def queryUsers():
+    query = """
+        SELECT * FROM users
+    """
+    print(f"Running query: {query}")
+    df = pd.read_sql_query(query, engine)
+    new = df.to_json(orient='records')
+    return new
+
+def queryUsermess(idUser):
+    query = """
+        SELECT text FROM messages WHERE users_idUser='{}'
+    """.format(idUser)
+    print(f"Running query: {query}")
+    df = pd.read_sql_query(query, engine)
+    new = df.to_json(orient='records')
+    return new
+
+def queryCreateUs(name):
+    query = "INSERT INTO users (userName) VALUES ('{}')".format(name)
+    with engine.connect() as con:
+        con.execute(query)
+    q = """
+        SELECT * FROM users WHERE userName='{}'
+    """.format(name)
+    print(f"Running query: {q}")
+    df = pd.read_sql_query(q, engine)
+    new = df.to_json(orient='records')
+    return new
+
+def queryCreateChat():
+    with engine.connect() as con:
+        number_chat = list(con.execute("SELECT idChat FROM chats ORDER BY idChat DESC LIMIT 1"))
+        new_chatId = number_chat[0][0]+1
+    with engine.connect() as con:
+        query = "INSERT INTO chats (idChat) VALUES ({})".format(new_chatId)
+        con.execute(query)
+    return {f'{new_chatId}': 'Created chat'}
+
+def queryCreateMess(text, user, chat):
+    query = '''INSERT INTO messages (text, datetime, users_idUser, chats_idChat) VALUES ('{}', CURRENT_TIMESTAMP, {}, {})'''.format(text, user, chat)
+    with engine.connect() as con:
+        con.execute(query)
+    
+    q = """
+        SELECT idMessage FROM messages WHERE text='{}'
+    """.format(text)
+    print(f"Running query: {q}")
+    df = pd.read_sql_query(q, engine)
+    new = df.to_json(orient='records')
+    return new
+
 def queryChat(chat_id):
     query = """
-        SELECT text FROM messages WHERE chats_idChat='{}'
+        SELECT users_idUser, text FROM messages WHERE chats_idChat='{}'
     """.format(chat_id)
     print(f"Running query: {query}")
     df = pd.read_sql_query(query, engine)
@@ -78,3 +130,25 @@ def mediaChat(list_name):
     y = round(sum([v['neu'] for dat in list_name for k, v in dat.items()])/len(list_name), 3)
     z = round(sum([v['pos'] for dat in list_name for k, v in dat.items()])/len(list_name), 3)
     return x, y, z
+
+def listSents(respond):
+    sid = SentimentIntensityAnalyzer()
+    lst = []
+    for sent in respond:
+        lst.append({sent['text'] : sid.polarity_scores(sent['text'])})
+    x, y, z = mediaChat(lst)
+    lst.insert(0, {'user media': {'neg': x, 'neu': y, 'pos': z}})
+    return lst
+
+def queryUserandMess(idUser):
+    query = """
+        SELECT users.userName, messages.text
+	from messages join
+	users
+	on messages.users_idUser = users.idUser
+	WHERE messages.users_idUser = {};
+    """.format(idUser)
+    print(f"Running query: {query}")
+    df = pd.read_sql_query(query, engine)
+    new = df.to_json(orient='records')
+    return new
