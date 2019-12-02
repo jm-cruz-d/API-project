@@ -83,5 +83,13 @@ def messandUsers(idUser=0):
     respond = json.loads(fa.queryUserandMess(idUser))
     return json.dumps(respond)
 
+# Recomendation
+@get('/recommend/<name>')
+def findFriend(name):
+    res = fa.recommendator(name)
+    return json.dumps(res)
+
+
+
 
 run(host='localhost', port=8080)

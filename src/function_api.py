@@ -1,6 +1,7 @@
 import sqlalchemy as db
 import os
 import pandas as pd
+import numpy as np
 import json
 import requests
 import nltk
@@ -8,6 +9,8 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from bson.json_util import dumps
 from sqlalchemy.sql import text
 import sqlalchemy as db
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity as distance
 from bottle import route, run, template, get, post, request
 from dotenv import load_dotenv
 load_dotenv()
@@ -152,3 +155,30 @@ def queryUserandMess(idUser):
     df = pd.read_sql_query(query, engine)
     new = df.to_json(orient='records')
     return new
+
+
+def oli():
+    texto1 = queryUsers()
+    lista = []
+    for i in range(1,len(texto1)):
+        X1=[]
+        for t in json.loads(json.dumps(queryUserandMess(i))):
+            print(t)
+            X1.append(t['text'])
+        lista.append(X1)
+    final={}
+    for i in range(1,len(texto1)):
+        if json.loads(json.dumps(queryUserandMess(i))) != []:
+            final[json.loads(json.dumps(queryUserandMess(i)))[0]['userName']] = ' '.join(lista[i-1])
+    return final
+
+def recommendator(name):
+    count_vectorizer = CountVectorizer(stop_words='english')
+    sparse_matrix = count_vectorizer.fit_transform(oli().values())
+    doc_term_matrix = sparse_matrix.todense()
+    df = pd.DataFrame(doc_term_matrix, columns=count_vectorizer.get_feature_names(), index=oli().keys())
+    similarity_matrix = distance(df, df)
+    sim_df = pd.DataFrame(similarity_matrix, columns=oli().keys(), index=oli().keys())
+    np.fill_diagonal(sim_df.values, 0) 
+    pepe = sim_df.idxmax()
+    return pepe.loc[name]
