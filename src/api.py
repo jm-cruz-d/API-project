@@ -1,24 +1,21 @@
 import sqlalchemy as db
-import getpass
 import os
-import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT 
 import pandas as pd
 import json
 import requests
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from bson.json_util import dumps
 from sqlalchemy.sql import text
 import sqlalchemy as db
 from bottle import route, run, template, get, post, request
-import random
+from dotenv import load_dotenv
+import function_api as fa
+load_dotenv()
 
-password = getpass.getpass("Insert your mysql root password: ")
-engine = db.create_engine('mysql+pymysql://root:{}@localhost/otraoportunidad'.format(password))
+url = os.getenv("CONNECTION")
+engine = db.create_engine(url)
 print("Connected to server!")
-
-#@route('/hello/<name>')
-#def index(name):
-#    return template('<b>Hello {{name}}</b>!', name=name)
 
 # Select messages from idUser
 @get('/Users/<idUser>')
@@ -26,31 +23,23 @@ def query(idUser=0):
     query = """
         SELECT * FROM messages WHERE users_idUser='{}'
     """.format(idUser)
-    print("Running query")
-    print(query)
+    print(f"Running query: {query}")
     df = pd.read_sql_query(query, engine)
     new = df.to_json(orient='records')
     return json.dumps(new)
 
 '''
-FUNCIÓN METIENDOLO EN LA URL
+Create a user introducing name in URL.
+If you wanna insert a full name you have to write %20 between first name and last name.
+
 @post('/user/create/<name>')
 def createUser(name):
     query = "INSERT INTO users (userName) VALUES ('{}')".format(name)
     with engine.connect() as con:
-        try:
-            con.execute(query)
-            #Get Response
-            id = con.fetchone()[0]
-            print(f"value inserted: {id}")
-        except:
-            print("At least I tried")
-    
+        con.execute(query)
     q = """
         SELECT * FROM users WHERE userName='{}'
     """.format(name)
-    print("Running query")
-    print(q)
     df = pd.read_sql_query(q, engine)
     new = df.to_json(orient='records')
     return json.dumps(new)
@@ -62,19 +51,11 @@ def createUser():
     name = str(request.forms.get('name'))
     query = "INSERT INTO users (userName) VALUES ('{}')".format(name)
     with engine.connect() as con:
-        try:
-            con.execute(query)
-            #Get Response
-            id = con.fetchone()[0]
-            print(f"value inserted: {id}")
-        except:
-            print("At least I tried")
-    
+        con.execute(query)
     q = """
         SELECT * FROM users WHERE userName='{}'
     """.format(name)
-    print("Running query")
-    print(q)
+    print(f"Running query: {q}")
     df = pd.read_sql_query(q, engine)
     new = df.to_json(orient='records')
     return json.dumps(new)
@@ -98,13 +79,12 @@ def createMessage(chat_id):
     chat = chat_id
     query = '''INSERT INTO messages (text, datetime, users_idUser, chats_idChat) VALUES ('{}', CURRENT_TIMESTAMP, {}, {})'''.format(text, user, chat)
     with engine.connect() as con:
-            con.execute(query)
+        con.execute(query)
     
     q = """
         SELECT idMessage FROM messages WHERE text='{}'
     """.format(text)
-    print("Running query")
-    print(q)
+    print(f"Running query: {q}")
     df = pd.read_sql_query(q, engine)
     new = df.to_json(orient='records')
     return json.dumps(new)
@@ -112,22 +92,20 @@ def createMessage(chat_id):
 # Select text from a chat
 @get('/chat/<chat_id>/list')
 def queryMessages(chat_id):
-    query = """
-        SELECT text FROM messages WHERE chats_idChat='{}'
-    """.format(chat_id)
-    print("Running query")
-    print(query)
-    df = pd.read_sql_query(query, engine)
-    new = df.to_json(orient='records')
-    return json.dumps(new)
+    chatina = fa.queryChat(chat_id)
+    return json.dumps(chatina)
 
-
-'''
-### Para probar en el jupyter notebook
-#import requests
-
-#data = requests.get('http://localhost:8080/chiste').json()
-#print(data["chiste"])
-'''
+#Sentiment analysis from messages
+@get('/chat/<chat_id>/sentiment')
+def analyseMessages(chat_id):
+    sid = SentimentIntensityAnalyzer()
+    respond = json.loads(fa.queryChat(chat_id))
+    lst = []
+    for sent in respond:
+        lst.append({sent['text'] : sid.polarity_scores(sent['text'])})
+    x, y, z = fa.mediaChat(lst)
+    lst.insert(0, {'chat media': {'neg': x, 'neu': y, 'pos': z}})
+    print(x, y, z)
+    return json.dumps(lst)
 
 run(host='localhost', port=8080)

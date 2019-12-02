@@ -1,18 +1,22 @@
 import sqlalchemy as db
-import getpass
 import os
-import psycopg2
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT 
 import pandas as pd
 import json
+import requests
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from bson.json_util import dumps
 from sqlalchemy.sql import text
 import sqlalchemy as db
+from bottle import route, run, template, get, post, request
+from dotenv import load_dotenv
+load_dotenv()
 
-password = getpass.getpass("Insert your mysql root password: ")
-engine = db.create_engine('mysql+pymysql://root:{}@localhost/otraoportunidad'.format(password))
+url = os.getenv("CONNECTION")
+engine = db.create_engine(url)
 print("Connected to server!")
 
-
+# Add json's files in a SQL Database
 def addConver(extension_json):
     query = "INSERT INTO {} VALUES {}"
     with engine.connect() as con:
@@ -60,36 +64,17 @@ def addConver(extension_json):
         return print('Done!')
 
 
-def query(idUser):
+def queryChat(chat_id):
     query = """
-        SELECT * FROM users WHERE idUser='{}'
-    """.format(idUser)
-    print("Running query")
-    print(query)
+        SELECT text FROM messages WHERE chats_idChat='{}'
+    """.format(chat_id)
+    print(f"Running query: {query}")
     df = pd.read_sql_query(query, engine)
     new = df.to_json(orient='records')
-    return json.dumps(new)
+    return new
 
-
-@post('/add')
-def add():
-    print(dict(request.forms))
-    autor=request.forms.get("autor")
-    chiste=request.forms.get("chiste")  
-    return {
-        "inserted_doc": str(coll.addChiste(autor,chiste))}
-
-@post('/user/create')
-def addConver():
-    query = "INSERT INTO conversation.users VALUES {}".format()
-    with engine.connect() as con:
-        for user in users:
-            q = query.format('users (idUser, userName)',"({}, '{}')".format(user[0],user[1]),'users.idUser')
-            print(q)
-            try:
-                con.execute(q)
-                #Get Response
-                id = con.fetchone()[0]
-                print(f"value inserted: {id}")
-            except:
-                print("At least I tried")
+def mediaChat(list_name):
+    x = round(sum([v['neg'] for dat in list_name for k, v in dat.items()])/len(list_name), 3)
+    y = round(sum([v['neu'] for dat in list_name for k, v in dat.items()])/len(list_name), 3)
+    z = round(sum([v['pos'] for dat in list_name for k, v in dat.items()])/len(list_name), 3)
+    return x, y, z
