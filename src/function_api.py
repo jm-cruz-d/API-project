@@ -157,28 +157,33 @@ def queryUserandMess(idUser):
     return new
 
 
-def oli():
-    texto1 = queryUsers()
+def recomDic():
+    texto1 = json.loads(json.dumps(queryUsers()))
+    print(texto1)
+    print(type(texto1))
+    print(type(texto1[0]))
+    print(len(texto1))
     lista = []
     for i in range(1,len(texto1)):
+        print(i)
         X1=[]
-        for t in json.loads(json.dumps(queryUserandMess(i))):
+        for t in queryUserandMess(i):
             print(t)
             X1.append(t['text'])
         lista.append(X1)
     final={}
     for i in range(1,len(texto1)):
-        if json.loads(json.dumps(queryUserandMess(i))) != []:
-            final[json.loads(json.dumps(queryUserandMess(i)))[0]['userName']] = ' '.join(lista[i-1])
+        if queryUserandMess(i) != []:
+            final[queryUserandMess(i)[0]['userName']] = ' '.join(lista[i-1])
     return final
 
 def recommendator(name):
     count_vectorizer = CountVectorizer(stop_words='english')
-    sparse_matrix = count_vectorizer.fit_transform(oli().values())
+    sparse_matrix = count_vectorizer.fit_transform(recomDic().values())
     doc_term_matrix = sparse_matrix.todense()
-    df = pd.DataFrame(doc_term_matrix, columns=count_vectorizer.get_feature_names(), index=oli().keys())
+    df = pd.DataFrame(doc_term_matrix, columns=count_vectorizer.get_feature_names(), index=recomDic().keys())
     similarity_matrix = distance(df, df)
-    sim_df = pd.DataFrame(similarity_matrix, columns=oli().keys(), index=oli().keys())
+    sim_df = pd.DataFrame(similarity_matrix, columns=recomDic().keys(), index=recomDic().keys())
     np.fill_diagonal(sim_df.values, 0) 
     pepe = sim_df.idxmax()
     return pepe.loc[name]
