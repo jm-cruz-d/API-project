@@ -1,4 +1,3 @@
-import sqlalchemy as db
 import os
 import pandas as pd
 import json
@@ -88,7 +87,6 @@ def messandUsers(idUser=0):
 def findFriend(name):
     res = fa.recommendator(name)
     return json.dumps(res)
-
 
 
 
