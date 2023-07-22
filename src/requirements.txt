@@ -1,7 +1,7 @@
 bottle==0.12.17
 bson==0.5.8
 mysql-connector==2.2.9
-nltk==3.4.5
+nltk==3.6.6
 numpy==1.17.3
 pandas==0.25.2
 python-dotenv==0.10.3
